@@ -17,6 +17,7 @@ class CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return Material(
       color: AppColors.surface,
       elevation: 3,
