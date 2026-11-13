@@ -13,6 +13,7 @@ class CategoryCard extends StatelessWidget {
 
   final IconData icon;
   final String label;
+
   final VoidCallback onTap;
 
   @override
