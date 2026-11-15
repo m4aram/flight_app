@@ -57,3 +57,82 @@ File: `lib/features/home/presentation/widgets/category_card.dart`
 
 3. The printed State follows the order of `props`
 4. `D/EGL_emulation` lines are emulator noise. Filter the Console with "flutter"
+5. ## Bonus: restoring a file with Git
+
+- `git log --oneline` shows all commits, newest on top
+- `git checkout <commit-id> -- <file>` brings back a file as it was in that commit
+- Always move my work somewhere safe before restoring, because checkout overwrites the file
+- # Day 3: Debugging
+
+## Breakpoints
+
+- A breakpoint (red dot) pauses the app at a specific line while it runs
+- The app freezes, and I can see the value of every variable at that moment
+- This lets me see a problem while it happens, before the user sees the result
+- Breakpoints only work when running in Debug mode (the bug button), not Run
+
+Example from today: I paused in `FlightSearchBloc._onSubmitted` and saw
+`departure = null`. I predicted the result before continuing:
+the app showed "Please choose a departure".
+
+## The debugger buttons
+
+| Key | Name | What it does |
+|---|---|---|
+| F8 | Step Over | Runs one line and stops at the next line in the same function |
+| F7 | Step Into | Goes inside the function called on the current line |
+| Shift + F8 | Step Out | Finishes the current function and goes back to the caller |
+| F9 | Resume | Runs until the next breakpoint, even in another file |
+| Ctrl + Shift + F8 | — | Shows all breakpoints, so I can delete them |
+
+## Reading a stack trace (Frames)
+
+- Frames = the chain of "who called who" until the current line
+- Read it from the bottom (start) to the top (where I am now)
+- Lines from my project look normal, library lines are dimmed
+- When an error shows a long red stack trace: find the first line from `lib/`, start there
+
+The full chain I saw for a flight search:
+
+DataSource      flight_remote_data_source.dart:55   (data)
+Repository      flight_repository_impl.dart:22      (data)
+guard           result.dart:35                      (core)
+UseCase         search_flights.dart:19              (domain)
+Bloc            flight_search_bloc.dart:189         (presentation)
+
+## Things I discovered while debugging
+
+- `validate()` stops at the first `return`, so only the first missing field is reported
+- A round trip is searched as two legs, so the DataSource breakpoint stops twice
+- `Skipped 22738 frames` appeared because the app was paused, not because it was slow
+
+## The Gradle error from setup
+
+- Error: `Could not close incremental caches`
+- Cause: my project is on drive E: and the Flutter packages are on drive C:.
+  Kotlin's incremental compilation doesn't handle files on two different drives
+- Fix: add `kotlin.incremental=false` to `android/gradle.properties`,
+  then `flutter clean`
+- Lesson: read the first red line of an error, not the last one
+# Day 4: First tests
+
+## The basics
+
+- A test is code that checks my code, so I don't have to test by hand every time
+- Testing pyramid: many Unit tests (fast), some Widget tests, few Integration tests (slow)
+- AAA: Arrange (prepare input) → Act (run the function) → Assert (check the result)
+- Test files live in `test/` with the same structure as `lib/`, and must end with `_test.dart`
+- `flutter test` runs all tests. `+9` = 9 passed, `-1` = 1 failed
+
+## Mistakes I made and learned from
+
+- `expect(result, 'isNull')` is wrong: with quotes it's a String. `isNull` without quotes is the matcher
+- `$minPasswordLength` works inside `validators.dart` but not in my test file. Write the final text: `8`
+- When a test fails, read Expected vs Actual and ask: is the code wrong, or the test?
+- Test descriptions must describe what the test checks, so a failure is easy to understand
+- Test the boundaries: 7 and 8 characters, because bugs hide at the limit
+
+## Why every test matters
+
+Each test guards one case. If AI later removes `.trim()` by mistake,
+the "spaces around the email" test fails and tells me right away.
