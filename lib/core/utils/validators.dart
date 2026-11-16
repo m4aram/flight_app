@@ -2,8 +2,7 @@
 /// otherwise a user-facing error message.
 abstract final class Validators {
   static final RegExp _emailRegex = RegExp(
-    r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$',
-  );
+    r'^[A-Za-z0-9_%+-]+(\.[A-Za-z0-9_%+-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$',  );
 
   static final RegExp _nameRegex = RegExp(r"^[\p{L} '\-]+$", unicode: true);
 
