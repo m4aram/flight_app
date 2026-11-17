@@ -63,23 +63,23 @@ void main() {
 
       expect(result, isNull);
     });
+    test('returns "Enter a valid email" when it starts with a dot'
+        , () {
+          final result = Validators.email('.manar@gmail.com');
 
-  });
-  test('returns "Enter a valid email" when it starts with a dot'
-      , () {
-    final result = Validators.email('.manar@gmail.com');
+          expect(result, 'Enter a valid email');
+        });
+    test('returns "Enter a valid email" when it ends with a dot before @'
+        ,  () {
+          final result = Validators.email('manar.@gmail.com');
 
-    expect(result, 'Enter a valid email');
-  });
-  test('returns "Enter a valid email" when it ends with a dot before @'
-,  () {
-    final result = Validators.email('manar.@gmail.com');
+          expect(result, 'Enter a valid email');
+        });
+    test('returns "Enter a valid email" when it has two dots in a row', () {
+      final result = Validators.email('manar..ali@gmail.com');
 
-    expect(result, 'Enter a valid email');
+      expect(result, 'Enter a valid email');
+    });
   });
-  test('returns "Enter a valid email" when it has two dots in a row', () {
-    final result = Validators.email('manar..ali@gmail.com');
 
-    expect(result, 'Enter a valid email');
-  });
 }

@@ -136,3 +136,17 @@ Bloc            flight_search_bloc.dart:189         (presentation)
 
 Each test guards one case. If AI later removes `.trim()` by mistake,
 the "spaces around the email" test fails and tells me right away.
+## Day 5: Unit tests
+- AAA: Arrange, Act, Assert
+- Change one thing only in each test
+- If a test fails: ask who is wrong, the code or the test?
+- Test the edges (9 seats, same day, 4 characters)
+- A failing test can mean I FOUND A BUG (email dots)
+- Red → fix the code → Green, and old tests must stay green
+## Day 6: Mocks (mocktail)
+- Mock = fake object, I control what it answers
+- when(...).thenAnswer / thenThrow = teach the mock
+- verify(...).called(1) = it was called once
+- verifyNever / verifyZeroInteractions = it was NOT called (security!)
+- Arrange and Assert must change together
+- Never ignore yellow warnings (deprecated / unused_import)
