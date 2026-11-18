@@ -150,3 +150,12 @@ the "spaces around the email" test fails and tells me right away.
 - verifyNever / verifyZeroInteractions = it was NOT called (security!)
 - Arrange and Assert must change together
 - Never ignore yellow warnings (deprecated / unused_import)
+## Day 7: bloc_test
+- blocTest = AAA for Blocs: build / act / expect
+- expect = LIST of NEW states, in order (initial state not included)
+- seed = start the Bloc from a ready state
+- setUp inside blocTest = teach the mock for this test only
+- verify = check what happened behind the scenes (verifyNever)
+- registerFallbackValue = needed for any() with my own classes
+- In expect: write fixed values, never copy logic from the code
+- A test is the project's memory: it remembers rules (clear password)
