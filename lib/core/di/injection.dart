@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,6 +12,7 @@ import '../../features/payment/payment_injection.dart';
 import '../../features/profile/profile_injection.dart';
 import '../../features/stories/stories_injection.dart';
 import '../../shared/data/datasources/catalog_local_data_source.dart';
+import '../network/dio_client.dart';
 import '../storage/key_value_storage.dart';
 import '../storage/secure_storage.dart';
 
@@ -32,7 +34,7 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton<CatalogLocalDataSource>(
       () => const CatalogLocalDataSourceImpl(),
-    );
+    )       ..registerLazySingleton<Dio>(() => createDio(sl()));
 
   initAuthFeature(sl);
   initAccountFeature(sl);

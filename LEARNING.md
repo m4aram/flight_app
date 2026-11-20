@@ -143,7 +143,7 @@ the "spaces around the email" test fails and tells me right away.
 - Test the edges (9 seats, same day, 4 characters)
 - A failing test can mean I FOUND A BUG (email dots)
 - Red → fix the code → Green, and old tests must stay green
-## Day 6: Mocks (mocktail)
+## Day 6: Mocks (mockpagestail)
 - Mock = fake object, I control what it answers
 - when(...).thenAnswer / thenThrow = teach the mock
 - verify(...).called(1) = it was called once
@@ -159,3 +159,27 @@ the "spaces around the email" test fails and tells me right away.
 - registerFallbackValue = needed for any() with my own classes
 - In expect: write fixed values, never copy logic from the code
 - A test is the project's memory: it remembers rules (clear password)
+## Day 8: Widget tests
+- Widget test = a robot that opens the screen, taps, types and looks
+- pumpWidget = open the screen
+- find.text / find.byTooltip / find.byType / find.widgetWithText
+- tap / enterText = act like the user
+- pump = draw once (instant changes)
+- pumpAndSettle = draw until nothing moves (waiting, animations)
+- Check BEFORE and AFTER (findsNothing then findsOneWidget)
+- Use LoginView (not LoginPage) to inject a Bloc with a mock
+- - flutter test --coverage = which lines ran during tests
+- Red = surely not tested. Green ≠ correct (email regex bug was green!)
+- Coverage is per LINE: `if (x) return;` is green even if return never ran
+- Don't chase 100%: boilerplate (props, toString) is not worth it
+- tester.widget<T>() = get the widget to check its properties (onTap == null)
+- Widget tests are ~20x slower than unit tests → test pyramid 
+## Day 9: HTTP and Status Codes
+- GET = read, POST = create, PUT = update, DELETE = delete
+- Header = envelope (Content-Type, token), Body = the actual data
+- Secrets (password, token) NEVER in the URL: it is saved in history, logs, WiFi
+- 2xx ok | 3xx use your copy / go elsewhere | 4xx app's fault | 5xx server's fault
+- 200 = ok, 201 = created (server gives the id), 304 = not modified (cache)
+- 401 = "who are you?" (login again), 403 = "I know you, but no"
+- Chrome F12 > Network = see method, status, headers of every request
+- "It works" ≠ "It's right" (GET /login?password=... works, but it's wrong)
