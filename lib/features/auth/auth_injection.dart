@@ -1,7 +1,9 @@
 import 'package:get_it/get_it.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'data/datasources/auth_local_data_source.dart';
 import 'data/datasources/auth_remote_data_source.dart';
+import 'data/datasources/supabase_auth_remote_data_source.dart';
 import 'data/repositories/auth_repository_impl.dart';
 import 'domain/repositories/auth_repository.dart';
 import 'domain/usecases/get_current_user.dart';
@@ -17,7 +19,9 @@ import 'presentation/bloc/sign_up_bloc.dart';
 void initAuthFeature(GetIt sl) {
   sl
     // Data
-    ..registerLazySingleton<AuthRemoteDataSource>(FakeAuthRemoteDataSource.new)
+    ..registerLazySingleton<AuthRemoteDataSource>(
+          () => SupabaseAuthRemoteDataSource(Supabase.instance.client),
+    )
     ..registerLazySingleton<AuthLocalDataSource>(
       () => AuthLocalDataSourceImpl(sl()),
     )

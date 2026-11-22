@@ -183,3 +183,12 @@ the "spaces around the email" test fails and tells me right away.
 - 401 = "who are you?" (login again), 403 = "I know you, but no"
 - Chrome F12 > Network = see method, status, headers of every request
 - "It works" ≠ "It's right" (GET /login?password=... works, but it's wrong)
+## Day 10: dio and errors
+- dio = the app's mailman; ONE instance (LazySingleton) for the whole app
+- baseUrl = start of every URL; timeouts = never wait forever
+- mapDioException = translator: DioException -> our AppException
+- No response at all (timeout) = "check your internet", not "server is broken"
+- Never show raw server messages (they may leak internals) 🔐
+- Interceptor = receptionist: adds "Authorization: Bearer <token>" to every request
+- Token = house key: stored in SecureStorage (encrypted), never SharedPreferences
+- 
