@@ -191,4 +191,47 @@ the "spaces around the email" test fails and tells me right away.
 - Never show raw server messages (they may leak internals) 🔐
 - Interceptor = receptionist: adds "Authorization: Bearer <token>" to every request
 - Token = house key: stored in SecureStorage (encrypted), never SharedPreferences
-- 
+## Day 11: Real backend (Supabase)
+- Changed ONE file + ONE line in auth_injection → all 47 tests still pass
+- That's Clean Architecture: tests talk to the interface (via mocks), not the backend
+- Publishable key = OK in the app. Secret key = NEVER in the app 🔐
+- `import ... as supabase` = fix name clash (their AuthException vs ours)
+- catch the specific exception BEFORE the general one (network vs wrong password)
+- When the backend fails, check dashboard SETTINGS before blaming the code
+- Passwords are stored hashed: nobody can read them, not even me
+  ✅ خلّصتي مراجعة الحمايات الأربع!
+  الحماية في مشروعك	وين	تمنع وش	OWASP
+  التوكن والجواز في SecureStorage	auth_local_data_source.dart	أحد يقرا التوكن من ملفات الجوال	M9 💾
+  الباسورد مخفي في toString	login_bloc.dart	الباسورد يطلع في الـ logs	M6 👤
+  تحقق الـ query parameters	app_router.dart	رابط خبيث يدخل بيانات غلط	M4 ✍️
+  رسالة نسيت الباسورد ما تكشف الإيميل	supabase_auth_remote_data_source.dart	المخترق يعرف مين مسجّل عندنا	M3
+### AI code review exercise
+- Found: no input validation (M4), no trim/lowercase, no timeout,
+  no try/catch (app crashes), returns bool (loses the error), untestable (no DI)
+- False alarms I made: "http" is the package name, the URL was https;
+  there was no print → always point to the exact line before saying "bug"
+- AI code can look secure and still be fragile and untestable
+### OWASP Mobile Top 10 (2024)
+
+| # | Risk | Simple meaning | Example in my project |
+|---|------|----------------|-----------------------|
+| M1 | Improper Credential Usage | Secret keys or passwords in a place someone can reach | Only the Supabase *publishable* key is in the app. The *secret* key must NEVER be in the app |
+| M2 | Inadequate Supply Chain Security | A package I use is unsafe or malicious | Before `flutter pub add`, check pub.dev: verified publisher, popularity, last update |
+| M3 | Insecure Authentication/Authorization | The app doesn't check WHO you are or WHAT you can do | 401 = "who are you?", 403 = "I know you, but no". Forgot-password message never says if the email exists |
+| M4 | Insufficient Input/Output Validation | Trusting what the user (or a link) sends | `Validators` (I fixed the email dots bug!) + `_sanitizeCode` in the router for deep links |
+| M5 | Insecure Communication | Data travels unencrypted on the network | Always `https://`, never `http://` (anyone on the same WiFi can read http) |
+| M6 | Inadequate Privacy Controls | Showing or logging personal data more than needed | Passport shown as `*****5678`, password hidden in `toString` |
+| M7 | Insufficient Binary Protections | Anyone can unpack the APK and read it | Never put anything in the app that I don't want people to see |
+| M8 | Security Misconfiguration | The code is fine, but the SETTINGS are wrong | Supabase: "Grant API access automatically" OFF. Turn "Confirm email" back ON before release |
+| M9 | Insecure Data Storage | Sensitive data saved without encryption | Token and passport in `SecureStorage`, never `SharedPreferences` |
+| M10 | Insufficient Cryptography | Weak or homemade encryption | Never write my own crypto (no MD5). Use trusted tools: Supabase hashes passwords |
+
+**Quick review checklist for AI code:**
+- [ ] Secret key or password in the code? (M1)
+- [ ] New package? Is it trusted? (M2)
+- [ ] Input checked before sending? (M4)
+- [ ] `https://`? (M5)
+- [ ] `print` with password/token? (M6)
+- [ ] Token in `SharedPreferences`? (M9)
+- [ ] Shows raw server error to the user?
+- [ ] Can it be tested with mocks? Does it handle no internet?
