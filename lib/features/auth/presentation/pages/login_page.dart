@@ -139,77 +139,125 @@ class LoginView extends StatelessWidget {
   }
 }
 
+// Replace everything from `class _LoginForm` down to (not including)
+// `class _SignUpPrompt` in login_page.dart with this code.
+
 class _LoginForm extends StatelessWidget {
   const _LoginForm();
 
   @override
   Widget build(BuildContext context) {
-    final bloc = context.read<LoginBloc>();
-    final state = context.watch<LoginBloc>().state;
-
-    return Column(
+    // No watch here: each child listens only to what it needs.
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AuthTextField(
-          hint: AppStrings.email,
-          keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.next,
-          autofillHints: const [AutofillHints.email],
-          errorText: state.emailError,
-          maxLength: 254,
-          onChanged: (v) => bloc.add(LoginEmailChanged(v)),
-        ),
-        const SizedBox(height: 12),
-        AuthTextField(
-          hint: AppStrings.password,
-          obscureText: state.obscurePassword,
-          textInputAction: TextInputAction.done,
-          autofillHints: const [AutofillHints.password],
-          errorText: state.passwordError,
-          maxLength: 128,
-          onChanged: (v) => bloc.add(LoginPasswordChanged(v)),
-          onSubmitted: (_) => bloc.add(const LoginSubmitted()),
-          suffixIcon: IconButton(
-            tooltip: state.obscurePassword ? 'Show password' : 'Hide password',
-            icon: Icon(
-              state.obscurePassword
-                  ? Icons.visibility_off_outlined
-                  : Icons.visibility_outlined,
-              color: AppColors.textSecondary,
-              size: 20,
-            ),
-            onPressed: () => bloc.add(const LoginPasswordVisibilityToggled()),
-          ),
-        ),
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: TextButton(
-            onPressed: () => context.push(AppRoutes.forgotPassword),
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              foregroundColor: AppColors.primary,
-            ),
-            child: const Text(
-              AppStrings.forgotPassword,
-              style: TextStyle(fontSize: 12),
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        PrimaryButton(
-          label: AppStrings.login,
-          borderRadius: 6,
-          isLoading: state.status == LoginStatus.submitting,
-          onPressed: () {
-            FocusScope.of(context).unfocus();
-            bloc.add(const LoginSubmitted());
-          },
-        ),
+        _EmailField(),
+        SizedBox(height: 12),
+        _PasswordField(),
+        _ForgotPasswordLink(),
+        SizedBox(height: 8),
+        _LoginButton(),
       ],
     );
   }
 }
 
+class _EmailField extends StatelessWidget {
+  const _EmailField();
+
+  @override
+  Widget build(BuildContext context) {
+    // Rebuilds only when the email error changes, not on every letter.
+    final error = context.select((LoginBloc b) => b.state.emailError);
+
+    return AuthTextField(
+      hint: AppStrings.email,
+      keyboardType: TextInputType.emailAddress,
+      textInputAction: TextInputAction.next,
+      autofillHints: const [AutofillHints.email],
+      errorText: error,
+      maxLength: 254,
+      onChanged: (v) => context.read<LoginBloc>().add(LoginEmailChanged(v)),
+    );
+  }
+}
+
+class _PasswordField extends StatelessWidget {
+  const _PasswordField();
+
+  @override
+  Widget build(BuildContext context) {
+    // A record compares by value, so this rebuilds only when one of the two changes.
+    final (error, obscure) = context.select(
+          (LoginBloc b) => (b.state.passwordError, b.state.obscurePassword),
+    );
+    final bloc = context.read<LoginBloc>();
+
+    return AuthTextField(
+      hint: AppStrings.password,
+      obscureText: obscure,
+      textInputAction: TextInputAction.done,
+      autofillHints: const [AutofillHints.password],
+      errorText: error,
+      maxLength: 128,
+      onChanged: (v) => bloc.add(LoginPasswordChanged(v)),
+      onSubmitted: (_) => bloc.add(const LoginSubmitted()),
+      suffixIcon: IconButton(
+        tooltip: obscure ? 'Show password' : 'Hide password',
+        icon: Icon(
+          obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+          color: AppColors.textSecondary,
+          size: 20,
+        ),
+        onPressed: () => bloc.add(const LoginPasswordVisibilityToggled()),
+      ),
+    );
+  }
+}
+
+class _ForgotPasswordLink extends StatelessWidget {
+  const _ForgotPasswordLink();
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: TextButton(
+        onPressed: () => context.push(AppRoutes.forgotPassword),
+        style: TextButton.styleFrom(
+          padding: EdgeInsets.zero,
+          foregroundColor: AppColors.primary,
+        ),
+        child: const Text(
+          AppStrings.forgotPassword,
+          style: TextStyle(fontSize: 12),
+        ),
+      ),
+    );
+  }
+}
+
+class _LoginButton extends StatelessWidget {
+  const _LoginButton();
+
+  @override
+  Widget build(BuildContext context) {
+    // Rebuilds only when loading starts or stops.
+    final isLoading = context.select(
+          (LoginBloc b) => b.state.status == LoginStatus.submitting,
+    );
+
+    return PrimaryButton(
+      label: AppStrings.login,
+      borderRadius: 6,
+      isLoading: isLoading,
+      onPressed: () {
+        FocusScope.of(context).unfocus();
+        context.read<LoginBloc>().add(const LoginSubmitted());
+      },
+    );
+  }
+}
 class _SignUpPrompt extends StatelessWidget {
   const _SignUpPrompt({required this.onSignUpTap});
 

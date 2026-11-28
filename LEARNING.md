@@ -235,3 +235,13 @@ the "spaces around the email" test fails and tells me right away.
 - [ ] Token in `SharedPreferences`? (M9)
 - [ ] Shows raw server error to the user?
 - [ ] Can it be tested with mocks? Does it handle no internet?
+## Day 13: Performance
+- 60 frames/second = 16ms per frame. Slower = jank
+- AI code "works" but can be slow: no red errors, tests pass, phone lags
+- Modes: debug (slow, for coding), profile (measure, real phone only), release
+- context.watch = rebuild on ANY change. context.select = only on the part I need
+- const = built once and reused, never rebuilt
+- Split big widgets: each small const widget selects only what it needs
+- cacheWidth = load the image at the size shown (big photo in small card wastes memory)
+- Edge case: width: double.infinity → (infinity * ratio).round() crashes → check isFinite
+- Refactoring = change HOW code is organized, not WHAT it does. Tests are the safety net 🕸️

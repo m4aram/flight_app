@@ -23,6 +23,12 @@ class AppImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Load the image at the size it is shown, not its full size,
+    // so a big photo in a small card doesn't waste memory.
+    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
+    final w = width;
+    final cacheWidth =
+    (w != null && w.isFinite) ? (w * pixelRatio).round() : null;
     return ClipRRect(
       borderRadius: borderRadius,
       child: Image.asset(
@@ -30,6 +36,7 @@ class AppImage extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
+        cacheWidth: cacheWidth,
         semanticLabel: semanticLabel,
         errorBuilder:
             (context, error, stackTrace) => Container(
