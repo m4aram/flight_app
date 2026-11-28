@@ -1,156 +1,104 @@
-# Flight ✈️
+# ✈️ Flight App
 
-تطبيق حجز طيران وفنادق مبني بـ **Flutter** على **Clean Architecture** وهيكلة **Feature-first** وإدارة الحالة بـ **Bloc**.
+[![CI](https://github.com/m4aram/flight_app/actions/workflows/ci.yml/badge.svg)](https://github.com/m4aram/flight_app/actions/workflows/ci.yml)
 
----
+A flight and hotel booking app built with **Flutter**, following **Clean Architecture** and **Bloc**.
+Login and sign up use a real backend (**Supabase**). The project has **47 automated tests** that run on every push.
 
-## التشغيل
+## 📱 Screenshots
 
-المشروع فيه مجلد `lib` و `assets` فقط، فلازم تولّد مجلدات المنصات أول مرة:
+| Splash | Home | Flight Search | Login |
+|---|---|---|---|
+| <img src="docs/screenshots/splash.png" width="200"> | <img src="docs/screenshots/home.png" width="200"> | <img src="docs/screenshots/flight_search.png" width="200"> | <img src="docs/screenshots/login.png" width="200"> |
+
+## ✨ Features
+
+- Animated splash screen (plane flies left, clouds come down)
+- Flight search: one way, round trip and multi-city
+- Passengers picker with real rules (max 9 seats, infants ≤ adults)
+- Hotel search, explore destinations and travel stories
+- Sign up / login / forgot password with **Supabase Auth**
+- Personal info, travel documents and preferred payment types
+
+## 🏗️ Architecture
+
+Feature-first folders, each feature split into three layers:
+
+```
+lib/
+├── core/                 # shared: DI, router, network, errors, theme, widgets
+└── features/
+    └── auth/
+        ├── presentation/ # pages + Blocs (UI state)
+        ├── domain/       # entities, use cases, repository interfaces (pure Dart)
+        └── data/         # repository implementations, data sources (Supabase, storage)
+```
+
+```
+UI → Bloc → Use case → Repository (interface) → Data source → Supabase
+```
+
+- The **domain** layer does not depend on Flutter, Supabase or any package.
+- Swapping the fake backend for Supabase changed **one file + one line** in DI, and all tests still passed.
+- Errors flow as `Exception` (data) → `Failure` (domain) → message on screen, using a `Result` type.
+
+## 🧰 Tech stack
+
+| Purpose | Package |
+|---|---|
+| State management | `flutter_bloc`, `equatable` |
+| Dependency injection | `get_it` |
+| Navigation | `go_router` |
+| Backend / Auth | `supabase_flutter` |
+| HTTP client | `dio` (with auth interceptor and error mapper) |
+| Secure storage | `flutter_secure_storage` |
+| Testing | `flutter_test`, `mocktail`, `bloc_test` |
+
+## 🧪 Testing
 
 ```bash
+flutter test --coverage
+```
+
+**47 tests** across all layers:
+
+| Layer | Examples |
+|---|---|
+| Unit (domain) | email validator, passenger rules, flight search validation, passport masking |
+| Unit (data) | repository maps `AuthException` → `AuthFailure` and never saves a session on failure; Dio error mapper (401, 500, timeout) |
+| Bloc | `LoginBloc`: submitting → success (password cleared from memory) / failure / empty form |
+| Widget | login errors, password visibility toggle, server error message, passengers counter |
+
+A real bug was found by tests: the email validator accepted `manar..ali@gmail.com`. It was fixed with a test first.
+
+## 🔐 Security
+
+Reviewed against the **OWASP Mobile Top 10 (2024)**:
+
+- Token and passport stored in `flutter_secure_storage`, never `SharedPreferences` (M9)
+- Only the Supabase **publishable** key is in the app, never the secret key (M1)
+- Input validation, and deep link query parameters are validated in the router (M4)
+- HTTPS only (M5)
+- Password hidden from logs (`toString`) and cleared from memory after login; passport number masked on screen (M6)
+- Same message for wrong email or wrong password, and forgot-password never reveals if an email exists (M3)
+
+## ⚡ Performance
+
+- `context.select` instead of `context.watch`, so widgets rebuild only for the data they use
+- `const` widgets wherever possible
+- Images decoded at their display size with `cacheWidth`
+
+## 🚀 Getting started
+
+```bash
+git clone https://github.com/m4aram/flight_app.git
 cd flight_app
-flutter create . --org com.example --platforms=android,ios
 flutter pub get
 flutter run
 ```
 
-**تسجيل الدخول التجريبي:** أي إيميل صحيح + كلمة مرور من 8 أحرف أو أكثر، أو أنشئ حساب من صفحة Sign up.
+Built with Flutter 3.47.7.
 
-> **تنبيه:** نصوص Terms of use و Privacy policy في `features/legal` نماذج مؤقتة. لازم تستبدلها بنصوص قانونية حقيقية قبل نشر التطبيق.
+## 🤖 CI
 
----
-
-## هيكلة المشروع
-
-```
-lib/
-├── main.dart                 # نقطة البداية: تهيئة DI ثم runApp
-├── app.dart                  # MaterialApp.router + البلوكات العامة (Auth, Settings)
-│
-├── core/                     # كل شي مشترك وما يعرف شي عن الـ features
-│   ├── constants/            # الألوان، النصوص، مسارات الصور، مفاتيح التخزين
-│   ├── di/injection.dart     # get_it: يستدعي init لكل feature
-│   ├── error/                # Exceptions (طبقة data) و Failures (domain/UI)
-│   ├── router/               # go_router: كل المسارات + الـ bottom nav
-│   ├── storage/              # تجريد SharedPreferences و SecureStorage
-│   ├── theme/                # الثيم وأنماط النصوص
-│   ├── usecase/              # العقد الأساسي UseCase<T, Params>
-│   ├── utils/                # Result, guard, التواريخ, الـ validators
-│   └── widgets/              # الأزرار، السحاب، الحقول، الـ app bar...
-│
-├── shared/                   # كيانات وبيانات تستخدمها أكثر من feature
-│   ├── data/                 # CatalogLocalDataSource (فنادق + وجهات)
-│   ├── domain/entities/      # Hotel, Destination
-│   └── widgets/              # HotelCard, DestinationCard
-│
-└── features/
-    ├── splash/               # أنيميشن الطائرة والسحاب
-    ├── main_shell/           # الـ Bottom Navigation (4 تبويبات)
-    ├── home/
-    ├── explore/
-    ├── flight_search/        # One-way / Round-trip / Multi-city + Passengers
-    ├── hotels/               # Hotel Bookings
-    ├── stories/              # Latest / Bookmarks
-    ├── auth/                 # Login + جلسة المستخدم
-    ├── account/              # صفحة الحساب + الإعدادات (اللغة، العملة، المنطقة)
-    ├── profile/              # Personal Info + Personal Details
-    └── payment/              # Preferred Payment Types
-```
-
-### داخل كل feature
-
-```
-feature_x/
-├── data/
-│   ├── datasources/   # من وين تجي البيانات (API / تخزين محلي)
-│   ├── models/        # fromJson / toJson — يرث من الـ entity
-│   └── repositories/  # تنفيذ الـ repository + تحويل Exception إلى Failure
-├── domain/            # Dart خالص، بدون Flutter
-│   ├── entities/
-│   ├── repositories/  # abstract interface فقط
-│   └── usecases/      # منطق العمل + التحقق من المدخلات
-├── presentation/
-│   ├── bloc/          # Events + States + Bloc
-│   ├── pages/         # Page (يوفّر BlocProvider) + View (الواجهة)
-│   └── widgets/
-└── feature_x_injection.dart   # تسجيل اعتماديات الـ feature في get_it
-```
-
-**اتجاه الاعتماد:** `presentation → domain ← data`.
-طبقة الـ domain ما تعتمد على أي طبقة ثانية.
-
----
-
-## تدفّق البيانات
-
-```
-UI ──event──▶ Bloc ──▶ UseCase ──▶ Repository (interface)
-                                         │
-                                RepositoryImpl ──▶ DataSource
-                                         │
-UI ◀──state── Bloc ◀── Result<T> (Success | Failed(Failure))
-```
-
-- كل repository يرجّع `Result<T>` بدل ما يرمي exceptions.
-- الدالة `guard()` في `core/utils/result.dart` تحوّل أي `AppException` إلى `Failure` مناسب.
-
----
-
-## ربط Backend حقيقي
-
-البيانات حالياً وهمية (mock). لربط API:
-
-1. أنشئ class جديد ينفّذ نفس الـ interface، مثلاً `AuthRemoteDataSourceImpl implements AuthRemoteDataSource`.
-2. غيّر سطر التسجيل في ملف الـ injection الخاص بالـ feature:
-
-```dart
-// features/auth/auth_injection.dart
-..registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(sl()))
-```
-
-ما تحتاج تعدّل أي شي في الـ domain أو الـ UI.
-
-الملفات الوهمية:
-| Feature | الملف |
-|---|---|
-| auth (login, sign up, reset password) | `FakeAuthRemoteDataSource` |
-| explore (getaway ideas) | `GetawayLocalDataSourceImpl` |
-| flight_search | `FakeFlightRemoteDataSource` |
-| hotels / home / explore / stories | `CatalogLocalDataSourceImpl` |
-
----
-
-## الصور
-
-الصور في `assets/images/` **مؤقتة** (مولّدة). استبدلها بصور حقيقية **بنفس الأسماء**
-(القائمة في `lib/core/constants/app_assets.dart`). إذا انحذفت صورة، التطبيق يعرض placeholder بدل ما يكرش.
-
----
-
-## أنيميشن الـ Splash
-
-`features/splash/presentation/widgets/splash_animation.dart`:
-
-| الوقت | الحركة |
-|---|---|
-| 0% → 45% | السحاب العلوي ينزل من فوق الشاشة |
-| 10% → 55% | السحاب السفلي ينزل ويستقر تحت |
-| 15% → 40% | الطائرة تظهر في المنتصف |
-| 25% → 50% | كلمة Flight تظهر |
-| 55% → 95% | الطائرة تطير لليسار وتطلع من الشاشة |
-| 100% | الانتقال إلى Home |
-
-المدة الكاملة في `_duration` (3 ثواني).
-
----
-
-## المكتبات
-
-| المكتبة | الاستخدام |
-|---|---|
-| `flutter_bloc` + `equatable` | إدارة الحالة |
-| `get_it` | Dependency Injection |
-| `go_router` | التنقّل + Bottom Navigation |
-| `shared_preferences` | الإعدادات، البروفايل، المفضلة |
-| `flutter_secure_storage` | توكن الجلسة (مشفّر) |
+GitHub Actions runs `flutter analyze` and `flutter test` on every push and pull request.
